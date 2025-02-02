@@ -407,8 +407,8 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop();
                 _resetGame(); // Reinicia o jogo
+                Navigator.of(context).pop();
               },
               child: const Text("Ok"),
             ),
@@ -578,7 +578,19 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
       appBar: AppBar(
         title: const Text("Jogo de Damas"),
       ),
-      body: Center(child: _buildBoard()),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildBoard(),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _resetGame,
+              child: const Text("Resetar Jogo"),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
