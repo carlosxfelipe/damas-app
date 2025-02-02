@@ -72,16 +72,22 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
   int? selectedRow;
   int? selectedCol;
 
+  // Controle do tempo de jogo
+  late DateTime _startTime;
+
+  // Flag para indicar que o jogo acabou
+  bool _gameOver = false;
+
   @override
   void initState() {
     super.initState();
     _initializeBoard();
+    _startTime = DateTime.now();
   }
 
   /// Inicializa o tabuleiro com a configuração padrão das damas.
   void _initializeBoard() {
-    // Posiciona as peças apenas nas casas escuras ((linha + coluna) ímpar)
-    // Peças pretas nas 3 primeiras linhas
+    // Peças pretas nas 3 primeiras linhas (nas casas escuras)
     for (int row = 0; row < 3; row++) {
       for (int col = 0; col < 8; col++) {
         if ((row + col) % 2 == 1) {
@@ -89,7 +95,7 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
         }
       }
     }
-    // Peças vermelhas nas 3 últimas linhas
+    // Peças vermelhas nas 3 últimas linhas (nas casas escuras)
     for (int row = 5; row < 8; row++) {
       for (int col = 0; col < 8; col++) {
         if ((row + col) % 2 == 1) {
@@ -230,7 +236,7 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
         // Movimento de captura
         if (rowDiff == 2 * direction && (colDiff == 2 || colDiff == -2)) {
           int midRow = fromRow + direction;
-          int midCol = fromCol + (colDiff ~/ 2);
+          int midCol = colDiff ~/ 2 + fromCol;
           if (board[midRow][midCol] != 0 &&
               !belongsTo(board[midRow][midCol], currentPlayer)) {
             setState(() {
@@ -363,10 +369,49 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
     return moves;
   }
 
+  /// Verifica se o jogo acabou e, se sim, exibe a janela com o vencedor e o tempo decorrido.
+  void _checkGameOver() {
+    if (_gameOver) return;
+    List<Move> moves = _getValidMovesForPlayer(currentPlayer);
+    if (moves.isEmpty) {
+      _gameOver = true;
+      // Se o jogador atual não possui movimentos, o vencedor é o outro jogador.
+      int winner = (currentPlayer == 1) ? 2 : 1;
+      Duration duration = DateTime.now().difference(_startTime);
+      _showGameOverDialog(winner, duration);
+    }
+  }
+
+  /// Exibe uma janela informando o vencedor e o tempo da partida.
+  void _showGameOverDialog(int winner, Duration duration) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text("Fim de Jogo"),
+          content: Text(
+              "Vencedor: Jogador $winner\nTempo da partida: ${duration.inMinutes} minuto(s) e ${duration.inSeconds % 60} segundo(s)"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Aqui você pode implementar a reinicialização do jogo, se desejar.
+              },
+              child: const Text("Ok"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   /// Controle de toque do jogador humano.
   /// Se já há uma peça selecionada e o movimento for válido, tenta movê-la.
   /// Se o movimento for de captura e houver captura adicional, a peça permanece selecionada para continuar.
   void _onSquareTap(int row, int col) {
+    if (_gameOver) return;
+
     if (selectedRow != null && selectedCol != null) {
       int oldRow = selectedRow!;
       int oldCol = selectedCol!;
@@ -386,7 +431,8 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
             selectedCol = null;
             currentPlayer = (currentPlayer == 1) ? 2 : 1;
           });
-          if (currentPlayer == 2) {
+          _checkGameOver();
+          if (currentPlayer == 2 && !_gameOver) {
             Future.delayed(const Duration(milliseconds: 500), _makeAIMove);
           }
         }
@@ -406,37 +452,40 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
   /// A IA escolhe, de forma aleatória, dentre os movimentos válidos (priorizando capturas)
   /// e, se o movimento for de captura com possibilidade de encadeamento, continua jogando.
   void _makeAIMove() async {
+    if (_gameOver) return;
+
     await Future.delayed(const Duration(milliseconds: 500));
     List<Move> validMoves = _getValidMovesForPlayer(currentPlayer);
+    if (validMoves.isEmpty) {
+      _checkGameOver();
+      return;
+    }
     List<Move> captureMoves =
         validMoves.where((move) => move.isCapture).toList();
     if (captureMoves.isNotEmpty) {
       validMoves = captureMoves;
     }
-    if (validMoves.isNotEmpty) {
-      validMoves.shuffle();
-      Move move = validMoves.first;
-      setState(() {
-        if (move.isCapture) {
-          int midRow = (move.fromRow + move.toRow) ~/ 2;
-          int midCol = (move.fromCol + move.toCol) ~/ 2;
-          board[midRow][midCol] = 0;
-        }
-        int piece = board[move.fromRow][move.fromCol];
-        board[move.toRow][move.toCol] = piece;
-        board[move.fromRow][move.fromCol] = 0;
-        _checkPromotion(move.toRow, move.toCol);
-      });
-      if (move.isCapture && _hasAdditionalCapture(move.toRow, move.toCol)) {
-        Future.delayed(const Duration(milliseconds: 500), _makeAIMove);
-        return;
+    validMoves.shuffle();
+    Move move = validMoves.first;
+    setState(() {
+      if (move.isCapture) {
+        int midRow = (move.fromRow + move.toRow) ~/ 2;
+        int midCol = (move.fromCol + move.toCol) ~/ 2;
+        board[midRow][midCol] = 0;
       }
-      setState(() {
-        currentPlayer = 1;
-      });
-    } else {
-      debugPrint("Fim de jogo ou a IA não tem movimentos válidos.");
+      int piece = board[move.fromRow][move.fromCol];
+      board[move.toRow][move.toCol] = piece;
+      board[move.fromRow][move.fromCol] = 0;
+      _checkPromotion(move.toRow, move.toCol);
+    });
+    if (move.isCapture && _hasAdditionalCapture(move.toRow, move.toCol)) {
+      Future.delayed(const Duration(milliseconds: 500), _makeAIMove);
+      return;
     }
+    setState(() {
+      currentPlayer = 1;
+    });
+    _checkGameOver();
   }
 
   /// Constrói a interface gráfica do tabuleiro.
