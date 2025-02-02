@@ -3,12 +3,12 @@
 Este é um projeto de um jogo de damas implementado em Flutter. O jogo segue as regras tradicionais das damas, permitindo movimentos simples e de captura, além da promoção de peças a dama quando alcançam a última linha adversária.
 
 <p align="center">
-  <img src="./320shots_so.png" alt="Preview do Projeto" />
+  <img src="./355shots_so.png" alt="Preview do Projeto" />
 </p>
 
 ## Funcionalidades
 
-- **Tabuleiro 8x8:** O jogo utiliza um tabuleiro de 8x8 casas, com alternância de cores para representar as casas escuras e claras.
+- **Tabuleiro:** O jogo utiliza um tabuleiro de 8x8 ou 10x10 casas, com alternância de cores para representar as casas escuras e claras.
 - **Movimentos e Capturas:** Implementação das regras para movimentos simples e capturas obrigatórias, considerando as diferenças entre peças normais e damas.
 - **Promoção de Peças:** Peças normais são promovidas a damas ao atingirem a última linha do tabuleiro do oponente.
 - **Interface Interativa:** Permite que o jogador selecione peças e realize movimentos através de toques na tela.
