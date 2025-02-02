@@ -382,6 +382,18 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
     }
   }
 
+  void _resetGame() {
+    setState(() {
+      board = List.generate(8, (index) => List.filled(8, 0));
+      _initializeBoard();
+      currentPlayer = 1;
+      selectedRow = null;
+      selectedCol = null;
+      _startTime = DateTime.now();
+      _gameOver = false;
+    });
+  }
+
   /// Exibe uma janela informando o vencedor e o tempo da partida.
   void _showGameOverDialog(int winner, Duration duration) {
     showDialog(
@@ -396,7 +408,7 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                // Aqui você pode implementar a reinicialização do jogo, se desejar.
+                _resetGame(); // Reinicia o jogo
               },
               child: const Text("Ok"),
             ),
