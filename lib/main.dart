@@ -12,6 +12,23 @@ class CheckersApp extends StatelessWidget {
     return MaterialApp(
       title: 'Jogo de Damas',
       debugShowCheckedModeBanner: false,
+      // Tema claro (padrão)
+      theme: ThemeData(
+        brightness: Brightness.light,
+        primarySwatch: Colors.blue,
+      ),
+      // Tema escuro, utilizado quando o sistema estiver em dark mode.
+      darkTheme: ThemeData(
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: Colors.black,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.black,
+          foregroundColor: Colors.white,
+        ),
+        textTheme: ThemeData.dark().textTheme,
+      ),
+      // Faz com que o tema seja definido conforme a preferência do sistema.
+      themeMode: ThemeMode.system,
       home: const CheckersGamePage(),
     );
   }
