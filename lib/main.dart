@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 void main() {
   runApp(const CheckersApp());
@@ -609,6 +610,85 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
     );
   }
 
+  Widget _buildBoardWeb() {
+    // Usamos LayoutBuilder para obter as dimensões disponíveis
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Define uma largura máxima para o board, por exemplo, 600 pixels.
+        double maxBoardWidth = 600;
+        // Usa a menor largura entre a disponível e o valor máximo.
+        double boardWidth = constraints.maxWidth < maxBoardWidth
+            ? constraints.maxWidth
+            : maxBoardWidth;
+        double squareSize = boardWidth / boardSize;
+        List<Widget> rowsWidgets = [];
+
+        for (int row = 0; row < boardSize; row++) {
+          List<Widget> rowSquares = [];
+          for (int col = 0; col < boardSize; col++) {
+            bool isDark = (row + col) % 2 == 1;
+            Color squareColor = isDark ? Colors.brown : Colors.grey[300]!;
+            if (selectedRow == row && selectedCol == col) {
+              squareColor = Colors.yellow;
+            }
+            Widget pieceWidget = Container();
+            int piece = board[row][col];
+            if (piece != 0) {
+              Color pieceColor =
+                  (piece == 1 || piece == 3) ? Colors.red : Colors.black;
+              bool king = isKing(piece);
+              pieceWidget = Center(
+                child: Container(
+                  width: squareSize * 0.8,
+                  height: squareSize * 0.8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: pieceColor,
+                    border: king
+                        ? Border.all(color: Colors.yellow, width: 3)
+                        : null,
+                  ),
+                  child: king
+                      ? Center(
+                          child: Text(
+                            "K",
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: squareSize * 0.4,
+                            ),
+                          ),
+                        )
+                      : null,
+                ),
+              );
+            }
+            rowSquares.add(GestureDetector(
+              onTap: () => _onSquareTap(row, col),
+              child: Container(
+                width: squareSize,
+                height: squareSize,
+                color: squareColor,
+                child: pieceWidget,
+              ),
+            ));
+          }
+          rowsWidgets.add(Row(
+            mainAxisSize: MainAxisSize.min,
+            children: rowSquares,
+          ));
+        }
+
+        return Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: rowsWidgets,
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -627,11 +707,36 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
           ),
         ],
       ),
+      // Adiciona o Floating Action Button no canto inferior direito.
+      floatingActionButton: FloatingActionButton(
+        child: const Icon(Icons.info_outline),
+        onPressed: () {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: const Text("Desenvolvedor"),
+                content: const Text("https://github.com/carlosxfelipe"),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Ok"),
+                  ),
+                ],
+              );
+            },
+          );
+        },
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       body: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildBoard(),
+            kIsWeb ? _buildBoardWeb() : _buildBoard(),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _resetGame,
