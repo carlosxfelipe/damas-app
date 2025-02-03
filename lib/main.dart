@@ -205,8 +205,7 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
           if (enemyCount > 1) return false;
         }
       }
-      // Se houver possibilidade de captura em outro lance, não permite simples (sem captura)
-      if (captureExists && enemyCount == 0) return false;
+      // Para a dama, permitimos o movimento simples mesmo que haja capturas disponíveis para outras peças.
       if (enemyCount == 0) {
         // Movimento simples da dama
         setState(() {
@@ -226,8 +225,7 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
       _checkDrawCondition();
       return true;
     } else {
-      // Para pedra normal:
-      // Movimento simples: somente para frente.
+      // Lógica para pedras normais permanece inalterada.
       int forward = currentPlayer == 1 ? -1 : 1;
       if (!captureExists && rowDiff == forward && colDiff.abs() == 1) {
         setState(() {
@@ -238,7 +236,6 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
         });
         return true;
       }
-      // Movimento de captura: permite salto em qualquer direção (2 casas)
       if (rowDiff.abs() == 2 && colDiff.abs() == 2) {
         int midRow = fromRow + rowDiff ~/ 2;
         int midCol = fromCol + colDiff ~/ 2;
