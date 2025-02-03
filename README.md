@@ -6,6 +6,8 @@ Este é um projeto de um jogo de damas implementado em Flutter. O jogo segue as 
   <img src="./355shots_so.png" alt="Preview do Projeto" />
 </p>
 
+[Visite o Damas App](https://damas-app.netlify.app/)
+
 ## Funcionalidades
 
 - **Tabuleiro:** O jogo utiliza um tabuleiro de 8x8 ou 10x10 casas, com alternância de cores para representar as casas escuras e claras.
