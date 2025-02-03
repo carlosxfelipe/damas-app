@@ -171,22 +171,26 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
   }
 
   /// Tenta mover a peça de (fromRow, fromCol) para (toRow, toCol), respeitando:
-  /// – Se houver captura disponível, somente movimentos de captura são permitidos.
-  /// – Para pedras: o movimento simples é somente para frente; a captura pode ser em qualquer direção.
-  /// – Para damas: o movimento simples e de captura se dá ao longo da diagonal inteira,
-  ///   mas para capturar, deve-se “pular” exatamente uma peça adversária.
+  /// – Para pedras: se a peça tiver uma jogada de captura disponível, somente movimentos de captura serão permitidos;
+  ///   caso contrário, o movimento simples (apenas para frente) é permitido.
+  /// – Para damas: o movimento (simples ou de captura) se dá ao longo de toda a diagonal.
+  ///   Neste exemplo, a dama não está obrigada a capturar mesmo que haja uma jogada de captura disponível.
   bool _tryMove(int fromRow, int fromCol, int toRow, int toCol) {
     if (board[toRow][toCol] != 0) return false;
     int piece = board[fromRow][fromCol];
     bool king = isKing(piece);
-    List<Move> validMoves = _getValidMovesForPlayer(currentPlayer);
-    bool captureExists = validMoves.any((move) => move.isCapture);
+
+    // Filtra os movimentos válidos apenas para a peça selecionada
+    List<Move> validMovesForPiece = _getValidMovesForPlayer(currentPlayer)
+        .where((move) => move.fromRow == fromRow && move.fromCol == fromCol)
+        .toList();
+    bool pieceHasCapture = validMovesForPiece.any((move) => move.isCapture);
 
     int rowDiff = toRow - fromRow;
     int colDiff = toCol - fromCol;
 
     if (king) {
-      // Movimentos de dama: verifica se o movimento é diagonal
+      // Movimentos da dama: verifica se o movimento é diagonal
       if (!_isDiagonal(fromRow, fromCol, toRow, toCol)) return false;
       int steps = rowDiff.abs();
       int stepRow = rowDiff ~/ steps;
@@ -205,7 +209,8 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
           if (enemyCount > 1) return false;
         }
       }
-      // Para a dama, permitimos o movimento simples mesmo que haja capturas disponíveis para outras peças.
+      // **Importante:** Aqui não aplicamos a regra de captura obrigatória para a dama,
+      // permitindo que ela se mova livremente, mesmo que tenha captura disponível.
       if (enemyCount == 0) {
         // Movimento simples da dama
         setState(() {
@@ -225,9 +230,10 @@ class _CheckersGamePageState extends State<CheckersGamePage> {
       _checkDrawCondition();
       return true;
     } else {
-      // Lógica para pedras normais permanece inalterada.
+      // Para pedra normal:
       int forward = currentPlayer == 1 ? -1 : 1;
-      if (!captureExists && rowDiff == forward && colDiff.abs() == 1) {
+      // Se a pedra selecionada não tiver captura, permite o movimento simples (apenas para frente)
+      if (!pieceHasCapture && rowDiff == forward && colDiff.abs() == 1) {
         setState(() {
           board[toRow][toCol] = piece;
           board[fromRow][fromCol] = 0;
