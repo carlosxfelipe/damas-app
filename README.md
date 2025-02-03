@@ -6,6 +6,10 @@ Este é um projeto de um jogo de damas implementado em Flutter. O jogo segue as 
   <img src="./355shots_so.png" alt="Preview do Projeto" />
 </p>
 
+## Demo Online
+
+O jogo foi compilado para a web usando o comando `flutter build web` e está disponível para acesso no seguinte link:
+
 [Visite o Damas App](https://damas-app.netlify.app/)
 
 ## Funcionalidades
